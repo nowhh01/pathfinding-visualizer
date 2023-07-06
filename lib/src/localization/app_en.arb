@@ -1,0 +1,11 @@
+{
+  "appTitle": "Pathfinding Visualizer",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  
+  "pathfindingViewTitle": "Pathfinding Visualizer",
+  "@pathfindingViewTitle": {
+    "description": "The title of the PathfindingView"
+  }
+}
