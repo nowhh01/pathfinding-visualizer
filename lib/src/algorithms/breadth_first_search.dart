@@ -1,19 +1,19 @@
 import 'dart:collection';
 import 'dart:developer';
 
-import 'package:flutter/material.dart';
-
 const int maxDistance = 99999;
 
+enum NodeType { none, searchedNode, pathNode, startingNode, endingNode }
+
 class Node {
-  final int row;
-  final int column;
-  Color color;
+  int row;
+  int column;
+  NodeType type;
   int distance;
   Node? previousNode;
 
   Node(
-      {this.color = Colors.white,
+      {this.type = NodeType.none,
       this.distance = maxDistance,
       this.previousNode,
       required this.row,
@@ -47,10 +47,10 @@ class Graph {
   Future<void> bfs(
     int row,
     int colum, [
-    Future<void> Function()? update,
+    Future<void> Function(Node)? update,
   ]) async {
     var startNode = nodes[row][colum];
-    startNode.color = Colors.grey;
+    startNode.type = NodeType.searchedNode;
     startNode.distance = 0;
     startNode.previousNode = null;
 
@@ -89,23 +89,22 @@ class Graph {
       }
 
       for (var neighborNode in adjacencies) {
-        if (neighborNode?.color == Colors.white) {
-          neighborNode!.color = Colors.grey;
+        if (neighborNode?.type == NodeType.none) {
+          neighborNode!.type = NodeType.searchedNode;
           neighborNode.distance = startNode.distance + 1;
           neighborNode.previousNode = startNode;
           queue.addLast(neighborNode);
+
+          await update?.call(neighborNode);
         }
       }
-
-      await update?.call();
-      // startNode.color = Colors.black;
     }
   }
 
   Future<void> findPath(
     Node startingNode,
     Node endingNode, [
-    Future<void> Function()? update,
+    Future<void> Function(Node)? update,
   ]) async {
     if (startingNode == endingNode) {
       log('${endingNode.row}-${endingNode.column} same');
@@ -117,8 +116,8 @@ class Graph {
         endingNode.previousNode!,
         update,
       );
-      await update?.call();
-      endingNode.color = Colors.yellow;
+      endingNode.type = NodeType.pathNode;
+      await update?.call(endingNode);
       log('${endingNode.row}-${endingNode.column}');
     }
   }
