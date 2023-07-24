@@ -20,7 +20,6 @@ class Node {
       required this.column});
 
   @override
-  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Node &&
@@ -45,19 +44,20 @@ class Graph {
   }
 
   Future<void> bfs(
-    int row,
-    int colum, [
+    Node startingNode,
+    Node endingNode, [
     Future<void> Function(Node)? update,
   ]) async {
-    var startNode = nodes[row][colum];
+    var startNode = nodes[startingNode.row][startingNode.column];
     startNode.type = NodeType.searchedNode;
     startNode.distance = 0;
     startNode.previousNode = null;
 
     final queue = Queue<Node>();
     queue.addLast(startNode);
+    var isEndingNodeFound = false;
 
-    while (queue.isNotEmpty) {
+    while (queue.isNotEmpty && !isEndingNodeFound) {
       startNode = queue.removeFirst();
 
       var adjacencies = List<Node?>.filled(4, null);
@@ -96,6 +96,11 @@ class Graph {
           queue.addLast(neighborNode);
 
           await update?.call(neighborNode);
+
+          if (neighborNode == endingNode) {
+            isEndingNodeFound = true;
+            break;
+          }
         }
       }
     }

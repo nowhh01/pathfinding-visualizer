@@ -107,13 +107,25 @@ class _PathfindingViewState extends State<PathfindingView> {
 
   Future<void> startFindingPath() async {
     await _graph.bfs(
-      startingPosition.$1,
-      startingPosition.$2,
+      graph.nodes[startingPosition.$1][startingPosition.$2],
+      graph.nodes[endingPosition.$1][endingPosition.$2],
       update,
     );
 
     await _graph.findPath(graph.nodes[startingPosition.$1][startingPosition.$2],
         graph.nodes[endingPosition.$1][endingPosition.$2], update);
+  }
+
+  Offset _getOffset(
+    int row,
+    int column,
+    double width,
+    double height,
+    double widthAdjuster,
+    double heightAdjuster,
+  ) {
+    return Offset(
+        column * width + widthAdjuster, row * height + heightAdjuster);
   }
 
   @override
@@ -163,13 +175,12 @@ class _PathfindingViewState extends State<PathfindingView> {
                           (i) {
                             final block = _blocks[i];
                             final (row, column) = block.rowColumn;
-                            var xPos = column * _boxSize + widthAdjuster;
-                            var yPos = row * _boxSize + heightAdjuster;
 
                             return AnimatedBlock(
                               key: ObjectKey(block),
                               _boxSize,
-                              Offset(xPos, yPos),
+                              _getOffset(row, column, _boxSize, _boxSize,
+                                  widthAdjuster, heightAdjuster),
                               block.type,
                               _animationTimeInMillisec,
                             );
@@ -182,7 +193,31 @@ class _PathfindingViewState extends State<PathfindingView> {
                           child: SizedBox(
                             width: double.infinity,
                             child: Stack(
-                              children: animatedBlocks,
+                              children: [
+                                BlockPaint(
+                                  size: const Size(_boxSize, _boxSize),
+                                  color: Colors.pink,
+                                  offset: _getOffset(
+                                      startingPosition.$1,
+                                      startingPosition.$2,
+                                      _boxSize,
+                                      _boxSize,
+                                      widthAdjuster,
+                                      heightAdjuster),
+                                ),
+                                ...animatedBlocks,
+                                BlockPaint(
+                                  size: const Size(_boxSize, _boxSize),
+                                  color: Colors.pink,
+                                  offset: _getOffset(
+                                      endingPosition.$1,
+                                      endingPosition.$2,
+                                      _boxSize,
+                                      _boxSize,
+                                      widthAdjuster,
+                                      heightAdjuster),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -348,12 +383,40 @@ class AnimatedBlock1 extends AnimatedWidget {
     final offset = _offset.value;
     final offsetForAddition = _offsetForAddition.value;
 
+    return BlockPaint(
+      size: size,
+      sizeForSubtraction: sizeForSubtraction,
+      color: color.value,
+      offset: offset,
+      offsetForAddition: offsetForAddition,
+    );
+  }
+}
+
+class BlockPaint extends StatelessWidget {
+  const BlockPaint({
+    super.key,
+    required this.size,
+    required this.offset,
+    this.color,
+    this.sizeForSubtraction = Size.zero,
+    this.offsetForAddition = Offset.zero,
+  });
+
+  final Size size;
+  final Size sizeForSubtraction;
+  final Color? color;
+  final Offset offset;
+  final Offset offsetForAddition;
+
+  @override
+  Widget build(BuildContext context) {
     return CustomPaint(
       painter: BlockPainter(
         size.width - sizeForSubtraction.width,
         size.height - sizeForSubtraction.width,
-        color.value,
-        offset.dx + offsetForAddition.dx + 0.5,
+        color,
+        offset.dx + offsetForAddition.dx,
         offset.dy + offsetForAddition.dy,
       ),
     );
