@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../algorithms/breadth_first_search.dart';
-import '../settings/settings_view.dart';
 
 const rowCount = 10;
 const columnCount = 10;
@@ -65,6 +64,54 @@ class Block {
 
   final NodeType _type;
   NodeType get type => _type;
+}
+
+class MenuEntry {
+  const MenuEntry(
+      {required this.label, this.shortcut, this.onPressed, this.menuChildren})
+      : assert(menuChildren == null || onPressed == null,
+            'onPressed is ignored if menuChildren are provided');
+  final String label;
+
+  final MenuSerializableShortcut? shortcut;
+  final VoidCallback? onPressed;
+  final List<MenuEntry>? menuChildren;
+
+  static List<Widget> build(List<MenuEntry> selections) {
+    Widget buildSelection(MenuEntry selection) {
+      if (selection.menuChildren != null) {
+        return SubmenuButton(
+          menuChildren: MenuEntry.build(selection.menuChildren!),
+          child: Text(selection.label),
+        );
+      }
+
+      return MenuItemButton(
+        shortcut: selection.shortcut,
+        onPressed: selection.onPressed,
+        child: Text(selection.label),
+      );
+    }
+
+    return selections.map<Widget>(buildSelection).toList();
+  }
+
+  static Map<MenuSerializableShortcut, Intent> shortcuts(
+      List<MenuEntry> selections) {
+    final Map<MenuSerializableShortcut, Intent> result =
+        <MenuSerializableShortcut, Intent>{};
+    for (final MenuEntry selection in selections) {
+      if (selection.menuChildren != null) {
+        result.addAll(MenuEntry.shortcuts(selection.menuChildren!));
+      } else {
+        if (selection.shortcut != null && selection.onPressed != null) {
+          result[selection.shortcut!] =
+              VoidCallbackIntent(selection.onPressed!);
+        }
+      }
+    }
+    return result;
+  }
 }
 
 class PathfindingView extends StatefulWidget {
@@ -144,35 +191,109 @@ class _PathfindingViewState extends State<PathfindingView> {
         column * width + widthAdjuster, row * height + heightAdjuster);
   }
 
+  List<MenuEntry> _getMenus() {
+    final List<MenuEntry> result = <MenuEntry>[
+      MenuEntry(
+        label: 'Algorithms',
+        menuChildren: <MenuEntry>[
+          MenuEntry(
+            label: 'Breadth-First Search',
+            onPressed: () {},
+          ),
+        ],
+      ),
+      MenuEntry(
+        label: 'Clear Board',
+        onPressed: reset,
+      ),
+      MenuEntry(
+        label: 'Start',
+        onPressed: startFindingPath,
+      )
+    ];
+
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.pathfindingViewTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.restorablePushNamed(
-                context,
-                SettingsView.routeName,
-              );
-            },
-          ),
-        ],
+        actions: MenuEntry.build(_getMenus()),
       ),
       body: Padding(
         padding: EdgeInsets.all(widget.padding),
         child: SafeArea(
           child: Column(
             children: [
-              ElevatedButton(
-                onPressed: startFindingPath,
-                child: const Text('start'),
-              ),
-              ElevatedButton(
-                onPressed: reset,
-                child: const Text('reset'),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Wrap(
+                  spacing: 8.0,
+                  runSpacing: 16,
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(Icons.chevron_right),
+                          Text('Start Node'),
+                        ],
+                      ),
+                    ),
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(Icons.adjust),
+                          Text('Target Node'),
+                        ],
+                      ),
+                    ),
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.square_outlined,
+                            color: Colors.red,
+                          ),
+                          Text('Unvisited Node'),
+                        ],
+                      ),
+                    ),
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(Icons.square, color: Colors.greenAccent),
+                          Text('Visited Node'),
+                        ],
+                      ),
+                    ),
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.square,
+                            color: Colors.yellow,
+                          ),
+                          Text('Shortest Path Node'),
+                        ],
+                      ),
+                    ),
+                    FittedBox(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.square,
+                            color: Colors.black,
+                          ),
+                          Text('Wall Node'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: Padding(
