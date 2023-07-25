@@ -3,7 +3,14 @@ import 'dart:developer';
 
 const int maxDistance = 99999;
 
-enum NodeType { none, searchedNode, pathNode, startingNode, endingNode }
+enum NodeType {
+  none,
+  searchedNode,
+  pathNode,
+  startingNode,
+  endingNode,
+  wallNode,
+}
 
 class Node {
   int row;

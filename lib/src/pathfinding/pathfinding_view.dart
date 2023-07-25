@@ -86,6 +86,9 @@ class _PathfindingViewState extends State<PathfindingView> {
   final _blocks = <Block>[];
   final _animationTimeInMillisec = 500;
 
+  var _widthAdjuster = double.nan;
+  var _heightAdjuster = double.nan;
+
   var _graph = Graph(rowCount, columnCount);
   Graph get graph => _graph;
 
@@ -114,6 +117,19 @@ class _PathfindingViewState extends State<PathfindingView> {
 
     await _graph.findPath(graph.nodes[startingPosition.$1][startingPosition.$2],
         graph.nodes[endingPosition.$1][endingPosition.$2], update);
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    final row = (details.localPosition.dy - _heightAdjuster) ~/ _boxSize;
+    final column = (details.localPosition.dx - _widthAdjuster) ~/ _boxSize;
+
+    if (_graph.nodes[row][column].type == NodeType.none) {
+      _graph.nodes[row][column].type = NodeType.wallNode;
+
+      setState(() {
+        _blocks.add(Block((row, column), NodeType.wallNode));
+      });
+    }
   }
 
   Offset _getOffset(
@@ -162,13 +178,11 @@ class _PathfindingViewState extends State<PathfindingView> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
-                    onTapDown: (details) => log('${details.localPosition.dx}'),
+                    onTapDown: _onTapDown,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final widthAdjuster =
-                            constraints.maxWidth % _boxSize / 2;
-                        final heightAdjuster =
-                            constraints.maxHeight % _boxSize / 2;
+                        _widthAdjuster = constraints.maxWidth % _boxSize / 2;
+                        _heightAdjuster = constraints.maxHeight % _boxSize / 2;
 
                         final animatedBlocks = List<Widget>.generate(
                           _blocks.length,
@@ -180,7 +194,7 @@ class _PathfindingViewState extends State<PathfindingView> {
                               key: ObjectKey(block),
                               _boxSize,
                               _getOffset(row, column, _boxSize, _boxSize,
-                                  widthAdjuster, heightAdjuster),
+                                  _widthAdjuster, _heightAdjuster),
                               block.type,
                               _animationTimeInMillisec,
                             );
@@ -189,7 +203,7 @@ class _PathfindingViewState extends State<PathfindingView> {
 
                         return CustomPaint(
                           painter: BoardPainter(
-                              _boxSize, heightAdjuster, widthAdjuster),
+                              _boxSize, _heightAdjuster, _widthAdjuster),
                           child: SizedBox(
                             width: double.infinity,
                             child: Stack(
@@ -202,8 +216,8 @@ class _PathfindingViewState extends State<PathfindingView> {
                                       startingPosition.$2,
                                       _boxSize,
                                       _boxSize,
-                                      widthAdjuster,
-                                      heightAdjuster),
+                                      _widthAdjuster,
+                                      _heightAdjuster),
                                 ),
                                 ...animatedBlocks,
                                 BlockPaint(
@@ -214,8 +228,8 @@ class _PathfindingViewState extends State<PathfindingView> {
                                       endingPosition.$2,
                                       _boxSize,
                                       _boxSize,
-                                      widthAdjuster,
-                                      heightAdjuster),
+                                      _widthAdjuster,
+                                      _heightAdjuster),
                                 ),
                               ],
                             ),
@@ -288,6 +302,14 @@ class _AnimatedBlockState extends State<AnimatedBlock>
           offset: widget.offset,
           color1: Colors.yellowAccent,
           color2: Colors.yellowAccent,
+        );
+      case NodeType.wallNode:
+        return AnimatedBlock1(
+          controller: _controller,
+          width: widget.width,
+          offset: widget.offset,
+          color1: Colors.grey,
+          color2: Colors.black,
         );
       default:
         return Container();
