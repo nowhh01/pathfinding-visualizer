@@ -331,7 +331,8 @@ class _PathfindingViewState extends State<PathfindingView> {
                               children: [
                                 BlockPaint(
                                   size: const Size(_boxSize, _boxSize),
-                                  color: Colors.pink,
+                                  // color: Colors.pink,
+                                  icon: Icons.chevron_right,
                                   offset: _getOffset(
                                       startingPosition.$1,
                                       startingPosition.$2,
@@ -343,7 +344,8 @@ class _PathfindingViewState extends State<PathfindingView> {
                                 ...animatedBlocks,
                                 BlockPaint(
                                   size: const Size(_boxSize, _boxSize),
-                                  color: Colors.pink,
+                                  // color: Colors.pink,
+                                  icon: Icons.adjust,
                                   offset: _getOffset(
                                       endingPosition.$1,
                                       endingPosition.$2,
@@ -529,7 +531,7 @@ class AnimatedBlock1 extends AnimatedWidget {
     return BlockPaint(
       size: size,
       sizeForSubtraction: sizeForSubtraction,
-      color: color.value,
+      color: color.value!,
       offset: offset,
       offsetForAddition: offsetForAddition,
     );
@@ -541,27 +543,29 @@ class BlockPaint extends StatelessWidget {
     super.key,
     required this.size,
     required this.offset,
-    this.color,
+    this.color = Colors.black,
+    this.icon,
     this.sizeForSubtraction = Size.zero,
     this.offsetForAddition = Offset.zero,
   });
 
   final Size size;
   final Size sizeForSubtraction;
-  final Color? color;
+  final Color color;
   final Offset offset;
   final Offset offsetForAddition;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: BlockPainter(
-        size.width - sizeForSubtraction.width,
-        size.height - sizeForSubtraction.width,
-        color,
-        offset.dx + offsetForAddition.dx,
-        offset.dy + offsetForAddition.dy,
-      ),
+          size.width - sizeForSubtraction.width,
+          size.height - sizeForSubtraction.width,
+          color,
+          offset.dx + offsetForAddition.dx,
+          offset.dy + offsetForAddition.dy,
+          icon),
     );
   }
 }
@@ -569,22 +573,33 @@ class BlockPaint extends StatelessWidget {
 class BlockPainter extends CustomPainter {
   final double width;
   final double height;
-  final Color? color;
+  final Color color;
   final double xPos;
   final double yPos;
+  final IconData? icon;
 
-  BlockPainter(this.width, this.height, this.color, this.xPos, this.yPos);
+  BlockPainter(this.width, this.height, this.color, this.xPos, this.yPos,
+      [this.icon]);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..strokeWidth = 5
-      ..color = color ?? Colors.indigoAccent
-      ..style = PaintingStyle.fill;
+    if (icon != null) {
+      final textPainter = TextPainter(textDirection: TextDirection.rtl);
+      textPainter.text = TextSpan(
+          text: String.fromCharCode(icon!.codePoint),
+          style: TextStyle(
+              fontSize: width, fontFamily: icon!.fontFamily, color: color));
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(xPos, yPos));
+    } else {
+      final paint = Paint()
+        ..strokeWidth = 5
+        ..color = color
+        ..style = PaintingStyle.fill;
+      final square = Rect.fromLTWH(xPos, yPos, width, height);
 
-    final square2 = Rect.fromLTWH(xPos, yPos, width, height);
-
-    canvas.drawRect(square2, paint);
+      canvas.drawRect(square, paint);
+    }
   }
 
   @override
