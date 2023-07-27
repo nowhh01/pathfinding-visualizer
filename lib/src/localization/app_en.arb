@@ -7,5 +7,19 @@
   "pathfindingViewTitle": "Pathfinding Visualizer",
   "@pathfindingViewTitle": {
     "description": "The title of the PathfindingView"
-  }
+  },
+  "menuItemAlgorithms": "Algorithms",
+  "menuItemBfs": "Breadth-First Search",
+  "menuItemClearBoard": "Clear Board",
+  "menuItemStart": "Start",
+  "menuItemSpeed": "Speed",
+  "menuItemSpeedFast": "Fast",
+  "menuItemSpeedNormal": "Normal",
+  "menuItemSpeedSlow": "Slow",
+  "startBlock": "Start Block",
+  "targetBlock": "Target Block",
+  "unvisitedBlock": "Unvisited Block",
+  "visitedBlock": "Visited Block",
+  "shortestPathBlock": "Shortest-Path Block",
+  "wallBlock": "Wall Block"
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InfoContainer extends StatelessWidget {
   const InfoContainer({
@@ -7,7 +8,9 @@ class InfoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Wrap(
+    final localizations = AppLocalizations.of(context)!;
+
+    return Wrap(
       spacing: 8.0,
       runSpacing: 16,
       direction: Axis.horizontal,
@@ -16,57 +19,48 @@ class InfoContainer extends StatelessWidget {
         FittedBox(
           child: Row(
             children: [
-              Icon(Icons.chevron_right),
-              Text('Start Node'),
+              const Icon(Icons.chevron_right),
+              Text(localizations.startBlock),
             ],
           ),
         ),
         FittedBox(
           child: Row(
             children: [
-              Icon(Icons.adjust),
-              Text('Target Node'),
+              const Icon(Icons.adjust),
+              Text(localizations.targetBlock),
             ],
           ),
         ),
         FittedBox(
           child: Row(
             children: [
-              Icon(
-                Icons.square_outlined,
-                color: Colors.red,
-              ),
-              Text('Unvisited Node'),
+              const Icon(Icons.square_outlined, color: Colors.red),
+              Text(localizations.unvisitedBlock),
             ],
           ),
         ),
         FittedBox(
           child: Row(
             children: [
-              Icon(Icons.square, color: Colors.greenAccent),
-              Text('Visited Node'),
+              const Icon(Icons.square, color: Colors.greenAccent),
+              Text(localizations.visitedBlock),
             ],
           ),
         ),
         FittedBox(
           child: Row(
             children: [
-              Icon(
-                Icons.square,
-                color: Colors.yellow,
-              ),
-              Text('Shortest Path Node'),
+              const Icon(Icons.square, color: Colors.yellow),
+              Text(localizations.shortestPathBlock),
             ],
           ),
         ),
         FittedBox(
           child: Row(
             children: [
-              Icon(
-                Icons.square,
-                color: Colors.black,
-              ),
-              Text('Wall Node'),
+              const Icon(Icons.square, color: Colors.black),
+              Text(localizations.wallBlock),
             ],
           ),
         ),

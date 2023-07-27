@@ -12,42 +12,74 @@ class PathfindingAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     final controller = context.read<PathfindingController>();
 
     return AppBar(
-      title: Text(AppLocalizations.of(context)!.pathfindingViewTitle),
+      title: Text(localizations.pathfindingViewTitle),
       actions: [
         SubmenuButton(
-          child: Text('Algorithms'),
           menuChildren: [
             MenuItemButton(
               onPressed: () {},
-              child: Text('Breadth-First Search'),
+              child: Text(localizations.menuItemBfs),
             )
           ],
+          child: Text(localizations.menuItemAlgorithms),
         ),
         MenuItemButton(
           onPressed: controller.resetGraph,
-          child: Text('Clear Board'),
+          child: Text(localizations.menuItemClearBoard),
         ),
         MenuItemButton(
           onPressed: controller.startFindingPath,
-          child: Text('Start'),
+          child: Text(localizations.menuItemStart),
         ),
         SubmenuButton(
-          child: Text(
-              'Speed: ${context.select((PathfindingController c) => c.speedType).name}'),
           menuChildren: [
-            for (var type in SpeedType.values)
-              MenuItemButton(
-                onPressed: () {
-                  controller.speedType = type;
-                },
-                child: Text('${type.name}'),
-              )
+            MenuItemButton(
+              onPressed: () {
+                controller.speedType = SpeedType.fast;
+              },
+              child: Text(localizations.menuItemSpeedFast),
+            ),
+            MenuItemButton(
+              onPressed: () {
+                controller.speedType = SpeedType.normal;
+              },
+              child: Text(localizations.menuItemSpeedNormal),
+            ),
+            MenuItemButton(
+              onPressed: () {
+                controller.speedType = SpeedType.slow;
+              },
+              child: Text(localizations.menuItemSpeedSlow),
+            ),
           ],
+          child: Text(
+            _getSpeedSubmenuButtonLabel(
+              localizations,
+              context.select((PathfindingController c) => c.speedType),
+            ),
+          ),
         ),
       ],
     );
+  }
+
+  String _getSpeedSubmenuButtonLabel(
+    AppLocalizations localizations,
+    SpeedType type,
+  ) {
+    switch (type) {
+      case SpeedType.fast:
+        return '${localizations.menuItemSpeed}: ${localizations.menuItemSpeedFast}';
+      case SpeedType.normal:
+        return '${localizations.menuItemSpeed}: ${localizations.menuItemSpeedNormal}';
+      case SpeedType.slow:
+        return '${localizations.menuItemSpeed}: ${localizations.menuItemSpeedSlow}';
+      default:
+        throw Exception('$type doesn\'t exist in SpeedType enum');
+    }
   }
 }

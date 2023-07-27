@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../algorithms/breadth_first_search.dart';
 
-enum SpeedType { fast, average, slow }
+enum SpeedType { fast, normal, slow }
 
 class Block {
   Block(rowColumn, type)
