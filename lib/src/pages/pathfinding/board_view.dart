@@ -34,31 +34,32 @@ class _BoardViewState extends State<BoardView> {
             _controller.getBlockCount(),
             (i) {
               final block = _controller.getBlock(i);
-              final (row, column) = block.rowColumn;
+              final offset = _getOffset(
+                block.row,
+                block.column,
+                width,
+                height,
+                _widthAdjuster,
+                _heightAdjuster,
+              );
 
               return AnimatedBlockWrapper(
                 key: ObjectKey(block),
-                width,
-                _getOffset(
-                  row,
-                  column,
-                  width,
-                  height,
-                  _widthAdjuster,
-                  _heightAdjuster,
-                ),
-                block.type,
-                _controller.animationTimeInMillisec,
+                width: width,
+                offset: offset,
+                startingColor: block.startingColor,
+                endingColor: block.endingColor,
+                animationTimeInMillisec: _controller.animationTimeInMillisec,
               );
             },
           );
 
           return CustomPaint(
-            painter: BoardPainter(
+            foregroundPainter: BoardPainter(
               width,
               height,
-              _heightAdjuster,
               _widthAdjuster,
+              _heightAdjuster,
             ),
             child: SizedBox(
               width: double.infinity,
@@ -104,8 +105,19 @@ class _BoardViewState extends State<BoardView> {
     final column = (details.localPosition.dx - _widthAdjuster) ~/
         _controller.blockSize.width;
 
-    if (_controller.getNodeType(row, column) == NodeType.none) {
-      _controller.setNodeType(row, column, NodeType.wallNode);
+    switch (_controller.getNodeType(row, column)) {
+      case NodeType.none:
+        _controller.changeNodeType(row, column, NodeType.wallNode);
+        break;
+      case NodeType.wallNode:
+        _controller.changeNodeType(row, column, NodeType.none);
+        break;
+      case NodeType.startingNode:
+      case NodeType.endingNode:
+      case NodeType.searchedNode:
+      case NodeType.pathNode:
+      default:
+        break;
     }
   }
 
@@ -125,11 +137,11 @@ class _BoardViewState extends State<BoardView> {
 class BoardPainter extends CustomPainter {
   final double _width;
   final double _height;
-  final double _heightAdjuster;
   final double _widthAdjuster;
+  final double _heightAdjuster;
 
   BoardPainter(
-      this._width, this._height, this._heightAdjuster, this._widthAdjuster);
+      this._width, this._height, this._widthAdjuster, this._heightAdjuster);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -164,5 +176,11 @@ class BoardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
+  }
+
+  @override
+  bool hitTest(Offset position) {
+    return position.dx - _widthAdjuster >= 0 &&
+        position.dy - _heightAdjuster >= 0;
   }
 }

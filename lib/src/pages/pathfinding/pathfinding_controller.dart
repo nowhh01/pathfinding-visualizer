@@ -5,15 +5,28 @@ import '../../algorithms/breadth_first_search.dart';
 enum SpeedType { fast, normal, slow }
 
 class Block {
-  Block(rowColumn, type)
-      : _rowColumn = rowColumn,
-        _type = type;
+  Block(int row, int column, NodeType type, Color startingColor,
+      Color endingColor)
+      : _row = row,
+        _column = column,
+        _type = type,
+        _startingColor = startingColor,
+        _endingColor = endingColor;
 
-  final (int, int) _rowColumn;
-  (int, int) get rowColumn => _rowColumn;
+  final int _row;
+  int get row => _row;
+
+  final int _column;
+  int get column => _column;
 
   final NodeType _type;
   NodeType get type => _type;
+
+  final Color _startingColor;
+  Color get startingColor => _startingColor;
+
+  final Color _endingColor;
+  Color get endingColor => _endingColor;
 }
 
 class PathfindingController extends ChangeNotifier {
@@ -44,15 +57,63 @@ class PathfindingController extends ChangeNotifier {
   Size get blockSize => _blockSize;
 
   NodeType getNodeType(int row, int column) => _graph.nodes[row][column].type;
-  void setNodeType(int row, int column, NodeType type) {
-    _graph.nodes[row][column].type = type;
-    _blocks.add(Block((row, column), type));
+  void changeNodeType(int row, int column, NodeType newType) {
+    final node = _graph.nodes[row][column];
+    if (node.type != newType) {
+      node.type = newType;
 
-    notifyListeners();
+      switch (newType) {
+        case NodeType.none:
+          for (var i = 0; i < _blocks.length; ++i) {
+            if (_blocks[i].row == row && _blocks[i].column == column) {
+              _blocks.removeAt(i);
+              break;
+            }
+          }
+
+          break;
+        case NodeType.wallNode:
+          final (startingColor, endingColor) =
+              getStartingAndEndingColors(newType);
+          _blocks.add(Block(
+            row,
+            column,
+            newType,
+            startingColor,
+            endingColor,
+          ));
+          break;
+        case NodeType.startingNode:
+        case NodeType.endingNode:
+        case NodeType.searchedNode:
+        case NodeType.pathNode:
+        default:
+          break;
+      }
+
+      notifyListeners();
+    }
+  }
+
+  (Color, Color) getStartingAndEndingColors(NodeType type) {
+    switch (type) {
+      case NodeType.searchedNode:
+        return (Colors.indigoAccent, Colors.greenAccent);
+      case NodeType.pathNode:
+        return (Colors.yellowAccent, Colors.yellowAccent);
+      case NodeType.wallNode:
+        return (Colors.grey, Colors.black);
+      default:
+        throw Exception('$type is not defined in getStartingAndEndingColors');
+    }
   }
 
   Block getBlock(int index) => _blocks[index];
   int getBlockCount() => _blocks.length;
+
+  void removeBlock(Block block) {
+    _blocks.remove(block);
+  }
 
   void resetGraph() {
     _graph = Graph(rowCount, columnCount);
@@ -62,7 +123,14 @@ class PathfindingController extends ChangeNotifier {
   }
 
   Future<void> update(Node node) async {
-    _blocks.add(Block((node.row, node.column), node.type));
+    final (startingColor, endingColor) = getStartingAndEndingColors(node.type);
+    _blocks.add(Block(
+      node.row,
+      node.column,
+      node.type,
+      startingColor,
+      endingColor,
+    ));
 
     notifyListeners();
 
