@@ -28,7 +28,7 @@ class PathfindingAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Text(localizations.menuItemAlgorithms),
         ),
         MenuItemButton(
-          onPressed: controller.resetGraph,
+          onPressed: controller.reset,
           child: Text(localizations.menuItemClearBoard),
         ),
         MenuItemButton(

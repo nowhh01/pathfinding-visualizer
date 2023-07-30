@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,14 +15,40 @@ class BoardView extends StatefulWidget {
   State<BoardView> createState() => _BoardViewState();
 }
 
-class _BoardViewState extends State<BoardView> {
+class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
+  final _animationControllers = <AnimationController>[];
   late PathfindingController _controller;
   late double _widthAdjuster;
   late double _heightAdjuster;
 
   @override
+  void initState() {
+    super.initState();
+    log('initState called');
+
+    _controller = context.read<PathfindingController>();
+    _controller.nodeBlockAddingEventHandler.subscribe(_raiseNodeBlockAdding);
+    _controller.resettingEventHandler.subscribe(_raiseResetting);
+    _controller.speedChangedEventHandler.subscribe(_raiseSpeedChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.nodeBlockAddingEventHandler.unsubscribe(_raiseNodeBlockAdding);
+    _controller.resettingEventHandler.unsubscribe(_raiseResetting);
+    _controller.speedChangedEventHandler.unsubscribe(_raiseSpeedChanged);
+
+    for (var i = 0; i < _animationControllers.length; ++i) {
+      _animationControllers[i].dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _controller = context.watch<PathfindingController>();
+    log('build');
+
+    context.watch<PathfindingController>();
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
 
@@ -31,25 +60,40 @@ class _BoardViewState extends State<BoardView> {
           _heightAdjuster = constraints.maxHeight % height / 2;
 
           final animatedBlocks = List<Widget>.generate(
-            _controller.getBlockCount(),
+            _controller.getNodeBlockCount(),
             (i) {
-              final block = _controller.getBlock(i);
+              final nodeBlock = _controller.getNodeBlock(i);
               final offset = _getOffset(
-                block.row,
-                block.column,
+                nodeBlock.row,
+                nodeBlock.column,
                 width,
                 height,
                 _widthAdjuster,
                 _heightAdjuster,
               );
+              final animationController = _animationControllers[i];
 
-              return AnimatedBlockWrapper(
-                key: ObjectKey(block),
+              return AnimatedBlock(
+                controller: animationController,
                 width: width,
                 offset: offset,
-                startingColor: block.startingColor,
-                endingColor: block.endingColor,
-                animationTimeInMillisec: _controller.animationTimeInMillisec,
+                startingColor: nodeBlock.startingColor,
+                endingColor: nodeBlock.endingColor,
+                onTap: () async {
+                  switch (nodeBlock.type) {
+                    case NodeType.wallNode:
+                      log('remove nodeblock');
+                      await animationController.reverse();
+                      animationController.dispose();
+
+                      _animationControllers.remove(animationController);
+                      _controller.changeNodeType(
+                          nodeBlock.row, nodeBlock.column, NodeType.none);
+                      break;
+                    default:
+                      break;
+                  }
+                },
               );
             },
           );
@@ -60,12 +104,13 @@ class _BoardViewState extends State<BoardView> {
               height,
               _widthAdjuster,
               _heightAdjuster,
+              _onHitTest,
             ),
             child: SizedBox(
               width: double.infinity,
               child: Stack(
                 children: [
-                  BlockPaint(
+                  Block(
                     size: _controller.blockSize,
                     icon: Icons.chevron_right,
                     offset: _getOffset(
@@ -78,7 +123,7 @@ class _BoardViewState extends State<BoardView> {
                     ),
                   ),
                   ...animatedBlocks,
-                  BlockPaint(
+                  Block(
                     size: _controller.blockSize,
                     icon: Icons.adjust,
                     offset: _getOffset(
@@ -99,19 +144,40 @@ class _BoardViewState extends State<BoardView> {
     );
   }
 
+  void _raiseNodeBlockAdding([EventArgs? _]) {
+    final newController = AnimationController(
+      duration: Duration(milliseconds: _controller.animationTimeInMillisec),
+      vsync: this,
+    );
+    _animationControllers.add(newController);
+    newController.forward();
+  }
+
+  void _raiseResetting([EventArgs? _]) {
+    for (var i = 0; i < _animationControllers.length; ++i) {
+      _animationControllers[i].dispose();
+    }
+    _animationControllers.clear();
+  }
+
+  void _raiseSpeedChanged([EventArgs? _]) {
+    final duration =
+        Duration(milliseconds: _controller.animationTimeInMillisec);
+    for (var i = 0; i < _animationControllers.length; ++i) {
+      _animationControllers[i].duration = duration;
+    }
+  }
+
   void _onTapDown(TapDownDetails details) {
-    final row = (details.localPosition.dy - _heightAdjuster) ~/
-        _controller.blockSize.height;
-    final column = (details.localPosition.dx - _widthAdjuster) ~/
-        _controller.blockSize.width;
+    log('tap down');
+    final (int row, int column) =
+        _getRowAndColumnFromOffset(details.localPosition);
 
     switch (_controller.getNodeType(row, column)) {
       case NodeType.none:
         _controller.changeNodeType(row, column, NodeType.wallNode);
         break;
       case NodeType.wallNode:
-        _controller.changeNodeType(row, column, NodeType.none);
-        break;
       case NodeType.startingNode:
       case NodeType.endingNode:
       case NodeType.searchedNode:
@@ -119,6 +185,28 @@ class _BoardViewState extends State<BoardView> {
       default:
         break;
     }
+  }
+
+  bool _onHitTest(Offset position) {
+    if (position.dx - _widthAdjuster < 0 || position.dy - _heightAdjuster < 0) {
+      log('_onHitTest false1');
+      return false;
+    }
+
+    final (int row, int column) = _getRowAndColumnFromOffset(position);
+    final result = _controller.getNodeType(row, column) == NodeType.none;
+
+    log('_onHitTest $result');
+
+    return result;
+  }
+
+  (int, int) _getRowAndColumnFromOffset(Offset position) {
+    final row = (position.dy - _heightAdjuster) ~/ _controller.blockSize.height;
+    final column =
+        (position.dx - _widthAdjuster) ~/ _controller.blockSize.width;
+
+    return (row, column);
   }
 
   Offset _getOffset(
@@ -139,9 +227,10 @@ class BoardPainter extends CustomPainter {
   final double _height;
   final double _widthAdjuster;
   final double _heightAdjuster;
+  final bool Function(Offset)? _onHitTest;
 
-  BoardPainter(
-      this._width, this._height, this._widthAdjuster, this._heightAdjuster);
+  BoardPainter(this._width, this._height, this._widthAdjuster,
+      this._heightAdjuster, this._onHitTest);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -179,8 +268,7 @@ class BoardPainter extends CustomPainter {
   }
 
   @override
-  bool hitTest(Offset position) {
-    return position.dx - _widthAdjuster >= 0 &&
-        position.dy - _heightAdjuster >= 0;
+  bool? hitTest(Offset position) {
+    return _onHitTest?.call(position);
   }
 }
