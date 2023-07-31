@@ -31,6 +31,13 @@ class NodeBlock {
 }
 
 class PathfindingController extends ChangeNotifier {
+  PathfindingController() {
+    _graph.nodes[startingRowColumn.$1][startingRowColumn.$2].type =
+        NodeType.startingNode;
+    _graph.nodes[endingRowColumn.$1][endingRowColumn.$2].type =
+        NodeType.endingNode;
+  }
+
   static const _animationTimesInMillisec = [100, 400, 800];
 
   final _nodeBlockAddingEventHandler = Event();
@@ -42,10 +49,21 @@ class PathfindingController extends ChangeNotifier {
   final _resettingEventHandler = Event();
   Event get resettingEventHandler => _resettingEventHandler;
 
-  final startingPosition = (1, 2);
-  final endingPosition = (9, 7);
+  var startingRowColumn = (1, 2);
+  var endingRowColumn = (9, 7);
+  NodeType? draggingType;
   final rowCount = 10;
   final columnCount = 10;
+
+  bool get isDragging => _blockPosition != null;
+
+  Offset? _blockPosition;
+  Offset? get blockPosition => _blockPosition;
+  set blockPosition(newPosition) {
+    _blockPosition = newPosition;
+
+    notifyListeners();
+  }
 
   final _nodeBlocks = <NodeBlock>[];
   int get animationTimeInMillisec =>
@@ -118,14 +136,14 @@ class PathfindingController extends ChangeNotifier {
 
   Future<void> startFindingPath() async {
     await _graph.bfs(
-      _graph.nodes[startingPosition.$1][startingPosition.$2],
-      _graph.nodes[endingPosition.$1][endingPosition.$2],
+      _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
+      _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
       _update,
     );
 
     await _graph.findPath(
-      _graph.nodes[startingPosition.$1][startingPosition.$2],
-      _graph.nodes[endingPosition.$1][endingPosition.$2],
+      _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
+      _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
       _update,
     );
   }

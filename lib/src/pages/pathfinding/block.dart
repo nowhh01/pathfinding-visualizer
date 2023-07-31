@@ -129,6 +129,9 @@ class Block extends StatelessWidget {
     this.sizeForSubtraction = Size.zero,
     this.offsetForAddition = Offset.zero,
     this.onTap,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
   });
 
   final Size size;
@@ -140,6 +143,9 @@ class Block extends StatelessWidget {
   final Color? iconColor;
   final double radius;
   final void Function()? onTap;
+  final void Function(DragStartDetails)? onPanStart;
+  final void Function(DragUpdateDetails)? onPanUpdate;
+  final void Function(DragEndDetails)? onPanEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +154,9 @@ class Block extends StatelessWidget {
       top: offset.dy + offsetForAddition.dy,
       child: GestureDetector(
         onTap: onTap,
+        onPanStart: onPanStart,
+        onPanUpdate: onPanUpdate,
+        onPanEnd: onPanEnd,
         child: Container(
           width: size.width - sizeForSubtraction.width,
           height: size.height - sizeForSubtraction.width,
@@ -155,7 +164,13 @@ class Block extends StatelessWidget {
             color: backgroundColor,
             borderRadius: BorderRadius.circular(radius),
           ),
-          child: icon != null ? Icon(icon, size: size.width) : null,
+          child: icon != null
+              ? Icon(
+                  icon,
+                  size: size.width,
+                  color: iconColor,
+                )
+              : null,
         ),
       ),
     );

@@ -97,6 +97,8 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
               );
             },
           );
+          final isDragging = _controller.isDragging;
+          final draggingType = _controller.draggingType;
 
           return CustomPaint(
             foregroundPainter: BoardPainter(
@@ -113,11 +115,35 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                   Block(
                     size: _controller.blockSize,
                     icon: Icons.chevron_right,
+                    iconColor:
+                        isDragging && draggingType == NodeType.startingNode
+                            ? Colors.black.withOpacity(0.2)
+                            : Colors.black,
                     offset: _getOffset(
-                      _controller.startingPosition.$1,
-                      _controller.startingPosition.$2,
+                      _controller.startingRowColumn.$1,
+                      _controller.startingRowColumn.$2,
                       width,
                       height,
+                      _widthAdjuster,
+                      _heightAdjuster,
+                    ),
+                    onPanStart: (details) => panStart(
+                        details,
+                        _controller.startingRowColumn.$1,
+                        _controller.startingRowColumn.$2,
+                        NodeType.startingNode,
+                        _widthAdjuster,
+                        _heightAdjuster),
+                    onPanUpdate: (details) => panUpdate(
+                        details,
+                        _controller.startingRowColumn.$1,
+                        _controller.startingRowColumn.$2,
+                        _widthAdjuster,
+                        _heightAdjuster),
+                    onPanEnd: (details) => panEnd(
+                      details,
+                      _controller.startingRowColumn.$1,
+                      _controller.startingRowColumn.$2,
                       _widthAdjuster,
                       _heightAdjuster,
                     ),
@@ -126,15 +152,46 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                   Block(
                     size: _controller.blockSize,
                     icon: Icons.adjust,
+                    iconColor: isDragging && draggingType == NodeType.endingNode
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.black,
                     offset: _getOffset(
-                      _controller.endingPosition.$1,
-                      _controller.endingPosition.$2,
+                      _controller.endingRowColumn.$1,
+                      _controller.endingRowColumn.$2,
                       width,
                       height,
                       _widthAdjuster,
                       _heightAdjuster,
                     ),
+                    onPanStart: (details) => panStart(
+                        details,
+                        _controller.endingRowColumn.$1,
+                        _controller.endingRowColumn.$2,
+                        NodeType.endingNode,
+                        _widthAdjuster,
+                        _heightAdjuster),
+                    onPanUpdate: (details) => panUpdate(
+                        details,
+                        _controller.endingRowColumn.$1,
+                        _controller.endingRowColumn.$2,
+                        _widthAdjuster,
+                        _heightAdjuster),
+                    onPanEnd: (details) => panEnd(
+                      details,
+                      _controller.endingRowColumn.$1,
+                      _controller.endingRowColumn.$2,
+                      _widthAdjuster,
+                      _heightAdjuster,
+                    ),
                   ),
+                  if (_controller.isDragging)
+                    Block(
+                      size: _controller.blockSize,
+                      icon: _controller.draggingType == NodeType.startingNode
+                          ? Icons.chevron_right
+                          : Icons.adjust,
+                      offset: _controller.blockPosition!,
+                    ),
                 ],
               ),
             ),
@@ -142,6 +199,66 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
         },
       ),
     );
+  }
+
+  void panUpdate(
+    DragUpdateDetails details,
+    int row,
+    int column,
+    double widthAdjuster,
+    double heightAdjuster,
+  ) {
+    final blockSize = _controller.blockSize;
+    final width = blockSize.width;
+    final height = blockSize.height;
+    final blockX = details.localPosition.dx - (width / 2) + (column * width);
+    final blockY = details.localPosition.dy + (row * height);
+
+    _controller.blockPosition = Offset(blockX, blockY);
+  }
+
+  void panStart(
+    DragStartDetails details,
+    int row,
+    int column,
+    NodeType type,
+    double widthAdjuster,
+    double heightAdjuster,
+  ) {
+    final x = details.localPosition.dx - (_controller.blockSize.width / 2);
+    final y = details.localPosition.dy - (_controller.blockSize.height / 2);
+
+    _controller.blockPosition = Offset(x, y);
+    _controller.draggingType = type;
+  }
+
+  void panEnd(
+    DragEndDetails details,
+    int row,
+    int column,
+    double widthAdjuster,
+    double heightAdjuster,
+  ) {
+    final width = _controller.blockSize.width;
+    final height = _controller.blockSize.height;
+    final blockPosition = _controller.blockPosition!;
+    final x = blockPosition.dx + (width / 2);
+    final y = blockPosition.dy;
+    final newColumn = x ~/ width;
+    final newRow = y ~/ height;
+
+    final draggingType = _controller.draggingType!;
+    final newRowColumn = (newRow, newColumn);
+    if (draggingType == NodeType.startingNode) {
+      _controller.startingRowColumn = newRowColumn;
+    } else {
+      _controller.endingRowColumn = newRowColumn;
+    }
+
+    _controller.changeNodeType(row, column, NodeType.none);
+    _controller.changeNodeType(newRow, newColumn, draggingType);
+    _controller.blockPosition = null;
+    _controller.draggingType = null;
   }
 
   void _raiseNodeBlockAdding([EventArgs? _]) {
@@ -188,6 +305,10 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   }
 
   bool _onHitTest(Offset position) {
+    if (_controller.isDragging) {
+      return false;
+    }
+
     if (position.dx - _widthAdjuster < 0 || position.dy - _heightAdjuster < 0) {
       log('_onHitTest false1');
       return false;
@@ -196,8 +317,12 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     final (int row, int column) = _getRowAndColumnFromOffset(position);
     final result = _controller.getNodeType(row, column) == NodeType.none;
 
-    log('_onHitTest $result');
+    if (row == _controller.startingRowColumn.$1 &&
+        column == _controller.startingRowColumn.$2) {
+      return false;
+    }
 
+    log('_onHitTest $result');
     return result;
   }
 

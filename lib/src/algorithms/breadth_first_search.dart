@@ -25,14 +25,6 @@ class Node {
       this.previousNode,
       required this.row,
       required this.column});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Node &&
-          runtimeType == other.runtimeType &&
-          row == other.row &&
-          column == other.column;
 }
 
 class Graph {
@@ -72,22 +64,22 @@ class Graph {
         switch (i) {
           case 0:
             if (startNode.column + 1 < columnCount) {
-              adjacencies[0] = nodes[startNode.row][startNode.column + 1];
+              adjacencies[i] = nodes[startNode.row][startNode.column + 1];
             }
             break;
           case 1:
-            if (startNode.column > 0) {
-              adjacencies[1] = nodes[startNode.row][startNode.column - 1];
+            if (startNode.row + 1 < rowCount) {
+              adjacencies[i] = nodes[startNode.row + 1][startNode.column];
             }
             break;
           case 2:
-            if (startNode.row + 1 < rowCount) {
-              adjacencies[2] = nodes[startNode.row + 1][startNode.column];
+            if (startNode.column > 0) {
+              adjacencies[i] = nodes[startNode.row][startNode.column - 1];
             }
             break;
           case 3:
             if (startNode.row > 0) {
-              adjacencies[3] = nodes[startNode.row - 1][startNode.column];
+              adjacencies[i] = nodes[startNode.row - 1][startNode.column];
             }
             break;
           default:
@@ -103,11 +95,13 @@ class Graph {
           queue.addLast(neighborNode);
 
           await update?.call(neighborNode);
+        }
 
-          if (neighborNode == endingNode) {
-            isEndingNodeFound = true;
-            break;
-          }
+        if (neighborNode == endingNode) {
+          neighborNode!.distance = startNode.distance + 1;
+          neighborNode.previousNode = startNode;
+          isEndingNodeFound = true;
+          break;
         }
       }
     }
