@@ -46,8 +46,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    log('build');
-
     context.watch<PathfindingController>();
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
@@ -94,6 +92,13 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                       break;
                   }
                 },
+                icon: switch (nodeBlock.direction) {
+                  Direction.up => Icons.keyboard_arrow_up,
+                  Direction.down => Icons.keyboard_arrow_down,
+                  Direction.left => Icons.keyboard_arrow_left,
+                  Direction.right => Icons.keyboard_arrow_right,
+                  _ => null
+                },
               );
             },
           );
@@ -114,7 +119,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                 children: [
                   Block(
                     size: _controller.blockSize,
-                    icon: Icons.chevron_right,
+                    icon: Icons.keyboard_arrow_right,
                     iconColor:
                         isDragging && draggingType == NodeType.startingNode
                             ? Colors.black.withOpacity(0.2)
@@ -310,7 +315,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     }
 
     if (position.dx - _widthAdjuster < 0 || position.dy - _heightAdjuster < 0) {
-      log('_onHitTest false1');
       return false;
     }
 
@@ -322,7 +326,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
       return false;
     }
 
-    log('_onHitTest $result');
     return result;
   }
 

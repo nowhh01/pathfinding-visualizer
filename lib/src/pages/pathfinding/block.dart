@@ -8,10 +8,12 @@ class AnimatedBlock extends AnimatedWidget {
     required Offset offset,
     required Color startingColor,
     required Color endingColor,
+    IconData? icon,
+    Color? iconColor,
     void Function()? onTap,
   })  : _size = SizeTween(
           begin: const Size(0.0, 0.0),
-          end: Size(width * 1.2, width * 1.2),
+          end: Size(width * 1.3, width * 1.3),
         ).animate(
           CurvedAnimation(
             parent: controller,
@@ -24,7 +26,7 @@ class AnimatedBlock extends AnimatedWidget {
         ),
         _sizeForSubtraction = SizeTween(
           begin: const Size(0.0, 0.0),
-          end: Size(width * 0.2, width * 0.2),
+          end: Size(width * 0.3, width * 0.3),
         ).animate(
           CurvedAnimation(
             parent: controller,
@@ -50,7 +52,7 @@ class AnimatedBlock extends AnimatedWidget {
         ),
         _offset = Tween<Offset>(
           begin: Offset(offset.dx + (width / 2), offset.dy + (width / 2)),
-          end: Offset(offset.dx - (width * 0.1), offset.dy - (width * 0.1)),
+          end: Offset(offset.dx - (width * 0.15), offset.dy - (width * 0.15)),
         ).animate(
           CurvedAnimation(
             parent: controller,
@@ -63,7 +65,7 @@ class AnimatedBlock extends AnimatedWidget {
         ),
         _offsetForAddition = Tween<Offset>(
           begin: const Offset(0.0, 0.0),
-          end: Offset(width * 0.1, width * 0.1),
+          end: Offset(width * 0.15, width * 0.15),
         ).animate(
           CurvedAnimation(
             parent: controller,
@@ -88,6 +90,8 @@ class AnimatedBlock extends AnimatedWidget {
           ),
         ),
         _onTap = onTap,
+        _icon = icon,
+        _iconColor = iconColor,
         super(key: key, listenable: controller);
 
   final Animation<Size?> _size;
@@ -97,6 +101,8 @@ class AnimatedBlock extends AnimatedWidget {
   final Animation<Color?> _color;
   final Animation<double> _radius;
   final void Function()? _onTap;
+  final IconData? _icon;
+  final Color? _iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +119,8 @@ class AnimatedBlock extends AnimatedWidget {
       offsetForAddition: offsetForAddition,
       radius: _radius.value,
       onTap: _onTap,
+      icon: _icon,
+      iconColor: _iconColor,
     );
   }
 }
@@ -167,7 +175,7 @@ class Block extends StatelessWidget {
           child: icon != null
               ? Icon(
                   icon,
-                  size: size.width,
+                  size: size.width - sizeForSubtraction.width,
                   color: iconColor,
                 )
               : null,

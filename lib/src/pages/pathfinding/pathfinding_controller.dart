@@ -5,14 +5,28 @@ import '../../algorithms/breadth_first_search.dart';
 
 enum SpeedType { fast, normal, slow }
 
+enum Direction {
+  none,
+  up,
+  down,
+  left,
+  right,
+}
+
 class NodeBlock {
-  NodeBlock(int row, int column, NodeType type, Color startingColor,
-      Color endingColor)
-      : _row = row,
+  NodeBlock(
+    int row,
+    int column,
+    NodeType type,
+    Color startingColor,
+    Color endingColor,
+    Direction direction,
+  )   : _row = row,
         _column = column,
         _type = type,
         _startingColor = startingColor,
-        _endingColor = endingColor;
+        _endingColor = endingColor,
+        _direction = direction;
 
   final int _row;
   int get row => _row;
@@ -28,6 +42,9 @@ class NodeBlock {
 
   final Color _endingColor;
   Color get endingColor => _endingColor;
+
+  final Direction _direction;
+  Direction get direction => _direction;
 }
 
 class PathfindingController extends ChangeNotifier {
@@ -102,15 +119,7 @@ class PathfindingController extends ChangeNotifier {
 
           break;
         case NodeType.wallNode:
-          final (startingColor, endingColor) =
-              _getStartingAndEndingColors(newType);
-          _addNodeBlock(NodeBlock(
-            row,
-            column,
-            newType,
-            startingColor,
-            endingColor,
-          ));
+          _addNodeBlock(node);
           break;
         case NodeType.startingNode:
         case NodeType.endingNode:
@@ -149,34 +158,59 @@ class PathfindingController extends ChangeNotifier {
   }
 
   Future<void> _update(Node node) async {
-    final (startingColor, endingColor) = _getStartingAndEndingColors(node.type);
-    _addNodeBlock(NodeBlock(
-      node.row,
-      node.column,
-      node.type,
-      startingColor,
-      endingColor,
-    ));
+    _addNodeBlock(node);
     notifyListeners();
 
     await Future.delayed(Duration(milliseconds: animationTimeInMillisec));
   }
 
-  void _addNodeBlock(NodeBlock newNodeBlock) {
+  void _addNodeBlock(Node node) {
+    Color startingColor;
+    Color endingColor;
+    Direction direction = Direction.none;
+
+    switch (node.type) {
+      case NodeType.searchedNode:
+        startingColor = Colors.indigoAccent;
+        endingColor = Colors.greenAccent;
+        break;
+      case NodeType.endingNode:
+        startingColor = Colors.yellowAccent;
+        endingColor = Colors.yellowAccent;
+        break;
+      case NodeType.pathNode:
+        startingColor = Colors.yellowAccent;
+        endingColor = Colors.yellowAccent;
+
+        final rowDifference = node.row - node.previousNode!.row;
+        final columnDifference = node.column - node.previousNode!.column;
+
+        direction = switch ((rowDifference, columnDifference)) {
+          (-1, 0) => Direction.up,
+          (1, 0) => Direction.down,
+          (0, -1) => Direction.left,
+          (0, 1) => Direction.right,
+          _ => Direction.none
+        };
+        break;
+      case NodeType.wallNode:
+        startingColor = Colors.grey;
+        endingColor = Colors.black;
+        break;
+      default:
+        throw Exception('${node.type} is not defined');
+    }
+
+    final newNodeBlock = NodeBlock(
+      node.row,
+      node.column,
+      node.type,
+      startingColor,
+      endingColor,
+      direction,
+    );
+
     _nodeBlockAddingEventHandler.broadcast();
     _nodeBlocks.add(newNodeBlock);
-  }
-
-  (Color, Color) _getStartingAndEndingColors(NodeType type) {
-    switch (type) {
-      case NodeType.searchedNode:
-        return (Colors.indigoAccent, Colors.greenAccent);
-      case NodeType.pathNode:
-        return (Colors.yellowAccent, Colors.yellowAccent);
-      case NodeType.wallNode:
-        return (Colors.grey, Colors.black);
-      default:
-        throw Exception('$type is not defined in getStartingAndEndingColors');
-    }
   }
 }

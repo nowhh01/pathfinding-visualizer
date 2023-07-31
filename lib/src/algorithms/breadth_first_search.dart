@@ -122,7 +122,10 @@ class Graph {
         endingNode.previousNode!,
         update,
       );
-      endingNode.type = NodeType.pathNode;
+
+      if (endingNode.type != NodeType.endingNode) {
+        endingNode.type = NodeType.pathNode;
+      }
       await update?.call(endingNode);
       log('${endingNode.row}-${endingNode.column}');
     }
