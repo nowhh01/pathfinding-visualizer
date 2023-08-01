@@ -213,11 +213,14 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     double widthAdjuster,
     double heightAdjuster,
   ) {
-    final blockSize = _controller.blockSize;
-    final width = blockSize.width;
-    final height = blockSize.height;
-    final blockX = details.localPosition.dx - (width / 2) + (column * width);
-    final blockY = details.localPosition.dy + (row * height);
+    final width = _controller.blockSize.width;
+    final height = _controller.blockSize.height;
+    final draggingBlockPosAjuster = _controller.draggingBlockPosAjuster;
+    final blockX = details.localPosition.dx -
+        draggingBlockPosAjuster.dx +
+        (column * width);
+    final blockY =
+        details.localPosition.dy - draggingBlockPosAjuster.dy + (row * height);
 
     _controller.blockPosition = Offset(blockX, blockY);
   }
@@ -230,10 +233,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     double widthAdjuster,
     double heightAdjuster,
   ) {
-    final x = details.localPosition.dx - (_controller.blockSize.width / 2);
-    final y = details.localPosition.dy - (_controller.blockSize.height / 2);
-
-    _controller.blockPosition = Offset(x, y);
     _controller.draggingType = type;
   }
 
@@ -247,8 +246,10 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
     final blockPosition = _controller.blockPosition!;
-    final x = blockPosition.dx + (width / 2);
-    final y = blockPosition.dy;
+    final draggingBlockPosAjuster = _controller.draggingBlockPosAjuster;
+
+    final x = blockPosition.dx + draggingBlockPosAjuster.dx;
+    final y = blockPosition.dy + draggingBlockPosAjuster.dy;
     final newColumn = x ~/ width;
     final newRow = y ~/ height;
 

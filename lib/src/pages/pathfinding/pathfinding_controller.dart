@@ -102,6 +102,9 @@ class PathfindingController extends ChangeNotifier {
   final Size _nodeBlockSize = const Size(50, 50);
   Size get blockSize => _nodeBlockSize;
 
+  Offset get draggingBlockPosAjuster =>
+      Offset(_nodeBlockSize.width / 4, _nodeBlockSize.height / 4);
+
   NodeType getNodeType(int row, int column) => _graph.nodes[row][column].type;
   void changeNodeType(int row, int column, NodeType newType) {
     final node = _graph.nodes[row][column];
