@@ -2,6 +2,7 @@ import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 
 import '../../algorithms/breadth_first_search.dart';
+import '../../algorithms/graph.dart';
 
 enum SpeedType { fast, normal, slow }
 

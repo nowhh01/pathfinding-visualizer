@@ -4,7 +4,7 @@ import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../algorithms/breadth_first_search.dart';
+import '../../algorithms/graph.dart';
 import 'block.dart';
 import 'pathfinding_controller.dart';
 

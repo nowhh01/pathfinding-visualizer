@@ -1,105 +1,39 @@
 import 'dart:collection';
 import 'dart:developer';
 
-const int maxDistance = 99999;
+import 'graph.dart';
 
-enum NodeType {
-  none,
-  searchedNode,
-  pathNode,
-  startingNode,
-  endingNode,
-  wallNode,
-}
-
-class Node {
-  int row;
-  int column;
-  NodeType type;
-  int distance;
-  Node? previousNode;
-
-  Node(
-      {this.type = NodeType.none,
-      this.distance = maxDistance,
-      this.previousNode,
-      required this.row,
-      required this.column});
-}
-
-class Graph {
-  late final int rowCount;
-  late final int columnCount;
-  late final List<List<Node>> nodes;
-
-  Graph(this.rowCount, this.columnCount) {
-    nodes = List<List<Node>>.generate(
-      rowCount,
-      (row) => List<Node>.generate(
-        columnCount,
-        (column) => Node(row: row, column: column),
-      ),
-    );
-  }
-
+extension BreadthFirstSearch on Graph {
   Future<void> bfs(
     Node startingNode,
     Node endingNode, [
     Future<void> Function(Node)? update,
   ]) async {
-    var startNode = nodes[startingNode.row][startingNode.column];
-    startNode.type = NodeType.searchedNode;
-    startNode.distance = 0;
-    startNode.previousNode = null;
+    startingNode.type = NodeType.searchedNode;
+    startingNode.distance = 0;
+    startingNode.previousNode = null;
 
     final queue = Queue<Node>();
-    queue.addLast(startNode);
+    queue.addLast(startingNode);
     var isEndingNodeFound = false;
 
     while (queue.isNotEmpty && !isEndingNodeFound) {
-      startNode = queue.removeFirst();
-
-      var adjacencies = List<Node?>.filled(4, null);
-      for (var i = 0; i < 4; ++i) {
-        switch (i) {
-          case 0:
-            if (startNode.column + 1 < columnCount) {
-              adjacencies[i] = nodes[startNode.row][startNode.column + 1];
-            }
-            break;
-          case 1:
-            if (startNode.row + 1 < rowCount) {
-              adjacencies[i] = nodes[startNode.row + 1][startNode.column];
-            }
-            break;
-          case 2:
-            if (startNode.column > 0) {
-              adjacencies[i] = nodes[startNode.row][startNode.column - 1];
-            }
-            break;
-          case 3:
-            if (startNode.row > 0) {
-              adjacencies[i] = nodes[startNode.row - 1][startNode.column];
-            }
-            break;
-          default:
-            break;
-        }
-      }
+      startingNode = queue.removeFirst();
+      final adjacencies = findAdjacentNodes(startingNode);
 
       for (var neighborNode in adjacencies) {
         if (neighborNode?.type == NodeType.none) {
           neighborNode!.type = NodeType.searchedNode;
-          neighborNode.distance = startNode.distance + 1;
-          neighborNode.previousNode = startNode;
+          neighborNode.distance = startingNode.distance + 1;
+          neighborNode.previousNode = startingNode;
           queue.addLast(neighborNode);
 
           await update?.call(neighborNode);
         }
 
         if (neighborNode == endingNode) {
-          neighborNode!.distance = startNode.distance + 1;
-          neighborNode.previousNode = startNode;
+          neighborNode!.distance = startingNode.distance + 1;
+          neighborNode.previousNode = startingNode;
           isEndingNodeFound = true;
           break;
         }
