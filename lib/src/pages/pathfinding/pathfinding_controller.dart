@@ -50,10 +50,7 @@ class NodeBlock {
 
 class PathfindingController extends ChangeNotifier {
   PathfindingController() {
-    _graph.nodes[startingRowColumn.$1][startingRowColumn.$2].type =
-        NodeType.startingNode;
-    _graph.nodes[endingRowColumn.$1][endingRowColumn.$2].type =
-        NodeType.endingNode;
+    _resetStartAndEndNode();
   }
 
   static const _animationTimesInMillisec = [100, 400, 800];
@@ -142,8 +139,10 @@ class PathfindingController extends ChangeNotifier {
 
   void reset() {
     _resettingEventHandler.broadcast();
-    _graph = Graph(rowCount, columnCount);
     _nodeBlocks.clear();
+    _graph = Graph(rowCount, columnCount);
+    _resetStartAndEndNode();
+
     notifyListeners();
   }
 
@@ -159,6 +158,13 @@ class PathfindingController extends ChangeNotifier {
       _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
       _update,
     );
+  }
+
+  void _resetStartAndEndNode() {
+    _graph.nodes[startingRowColumn.$1][startingRowColumn.$2].type =
+        NodeType.startingNode;
+    _graph.nodes[endingRowColumn.$1][endingRowColumn.$2].type =
+        NodeType.endingNode;
   }
 
   Future<void> _update(Node node) async {
