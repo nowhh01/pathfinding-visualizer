@@ -5,63 +5,59 @@ import 'graph.dart';
 
 extension BreadthFirstSearch on Graph {
   Future<void> bfs(
-    Node startingNode,
-    Node endingNode, [
+    Node startNode,
+    Node targetNode, [
     Future<void> Function(Node)? update,
   ]) async {
-    startingNode.type = NodeType.searchedNode;
-    startingNode.distance = 0;
-    startingNode.previousNode = null;
+    startNode.distance = 0;
 
     final queue = Queue<Node>();
-    queue.addLast(startingNode);
-    var isEndingNodeFound = false;
+    queue.addLast(startNode);
 
-    while (queue.isNotEmpty && !isEndingNodeFound) {
-      startingNode = queue.removeFirst();
-      final adjacencies = findAdjacentNodes(startingNode);
+    while (queue.isNotEmpty) {
+      startNode = queue.removeFirst();
+      final adjacencies = findAdjacentNodes(startNode);
 
       for (var neighborNode in adjacencies) {
         if (neighborNode?.type == NodeType.none) {
           neighborNode!.type = NodeType.searchedNode;
-          neighborNode.distance = startingNode.distance + 1;
-          neighborNode.previousNode = startingNode;
+          neighborNode.distance = startNode.distance + 1;
+          neighborNode.previousNode = startNode;
           queue.addLast(neighborNode);
 
           await update?.call(neighborNode);
         }
 
-        if (neighborNode == endingNode) {
-          neighborNode!.distance = startingNode.distance + 1;
-          neighborNode.previousNode = startingNode;
-          isEndingNodeFound = true;
-          break;
+        if (neighborNode == targetNode) {
+          neighborNode!.distance = startNode.distance + 1;
+          neighborNode.previousNode = startNode;
+          return;
         }
       }
     }
   }
 
   Future<void> findPath(
-    Node startingNode,
-    Node endingNode, [
+    Node startNode,
+    Node targetNode, [
     Future<void> Function(Node)? update,
   ]) async {
-    if (startingNode == endingNode) {
-      log('${endingNode.row}-${endingNode.column} same');
-    } else if (endingNode.previousNode == null) {
-      log('${endingNode.row}-${endingNode.column} no path');
+    if (startNode == targetNode) {
+      log('${targetNode.row}-${targetNode.column} same');
+    } else if (targetNode.previousNode == null) {
+      log('${targetNode.row}-${targetNode.column} no path');
     } else {
       await findPath(
-        startingNode,
-        endingNode.previousNode!,
+        startNode,
+        targetNode.previousNode!,
         update,
       );
 
-      if (endingNode.type != NodeType.endingNode) {
-        endingNode.type = NodeType.pathNode;
+      if (targetNode.type != NodeType.endingNode) {
+        targetNode.type = NodeType.pathNode;
       }
-      await update?.call(endingNode);
-      log('${endingNode.row}-${endingNode.column}');
+      await update?.call(targetNode);
+      log('${targetNode.row}-${targetNode.column}');
     }
   }
 }

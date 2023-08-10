@@ -4,25 +4,24 @@ import 'graph.dart';
 
 extension DepthFirstSearch on Graph {
   Future<void> dfs(
-    Node startingNode,
-    Node endingNode, [
+    Node startNode,
+    Node targetNode, [
     Future<void> Function(Node)? update,
   ]) async {
     final stack = Stack<Node>();
-    for (var adjacentNode in findAdjacentNodes(startingNode)) {
+    for (var adjacentNode in findAdjacentNodes(startNode)) {
       if (adjacentNode != null) {
         stack.push(adjacentNode);
       }
     }
 
-    var isEndingNodeFound = false;
-    while (stack.isNotEmpty && !isEndingNodeFound) {
+    while (stack.isNotEmpty) {
       final node = stack.pop();
 
       if (node.type == NodeType.none) {
         node.type = NodeType.searchedNode;
-        node.previousNode = startingNode;
-        node.distance = startingNode.distance + 1;
+        node.previousNode = startNode;
+        node.distance = startNode.distance + 1;
         await update?.call(node);
 
         var isNewNodeAdded = false;
@@ -36,15 +35,14 @@ extension DepthFirstSearch on Graph {
         }
 
         if (isNewNodeAdded) {
-          startingNode = node;
+          startNode = node;
         }
       }
 
-      if (node == endingNode) {
-        node.distance = startingNode.distance + 1;
-        node.previousNode = startingNode;
-        isEndingNodeFound = true;
-        break;
+      if (node == targetNode) {
+        node.distance = startNode.distance + 1;
+        node.previousNode = startNode;
+        return;
       }
     }
   }
