@@ -49,11 +49,18 @@ class NodeBlock {
 }
 
 class PathfindingController extends ChangeNotifier {
-  PathfindingController() {
+  PathfindingController()
+      : rowCount = 20,
+        columnCount = 20,
+        _graph = Graph(20, 20) {
     _resetStartAndEndNode();
   }
 
   static const _animationTimesInMillisec = [100, 400, 800];
+  final int rowCount;
+  final int columnCount;
+  late double widthAdjuster;
+  late double heightAdjuster;
 
   final _nodeBlockAddingEventHandler = Event();
   Event get nodeBlockAddingEventHandler => _nodeBlockAddingEventHandler;
@@ -67,18 +74,8 @@ class PathfindingController extends ChangeNotifier {
   var startingRowColumn = (1, 2);
   var endingRowColumn = (9, 7);
   NodeType? draggingType;
-  final rowCount = 10;
-  final columnCount = 10;
-
-  bool get isDragging => _blockPosition != null;
-
-  Offset? _blockPosition;
-  Offset? get blockPosition => _blockPosition;
-  set blockPosition(newPosition) {
-    _blockPosition = newPosition;
-
-    notifyListeners();
-  }
+  Graph _graph;
+  Size blockSize = Size.zero;
 
   final _nodeBlocks = <NodeBlock>[];
   int get animationTimeInMillisec =>
@@ -95,13 +92,17 @@ class PathfindingController extends ChangeNotifier {
     }
   }
 
-  var _graph = Graph(10, 10);
+  Offset? _blockPosition;
+  Offset? get blockPosition => _blockPosition;
+  set blockPosition(newPosition) {
+    _blockPosition = newPosition;
 
-  final Size _nodeBlockSize = const Size(50, 50);
-  Size get blockSize => _nodeBlockSize;
+    notifyListeners();
+  }
 
+  bool get isDragging => _blockPosition != null;
   Offset get draggingBlockPosAjuster =>
-      Offset(_nodeBlockSize.width / 4, _nodeBlockSize.height / 4);
+      Offset(blockSize.width / 4, blockSize.height / 4);
 
   NodeType getNodeType(int row, int column) => _graph.nodes[row][column].type;
   void changeNodeType(int row, int column, NodeType newType) {

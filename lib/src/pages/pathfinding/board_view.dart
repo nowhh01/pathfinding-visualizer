@@ -18,8 +18,6 @@ class BoardView extends StatefulWidget {
 class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   final _animationControllers = <AnimationController>[];
   late PathfindingController _controller;
-  late double _widthAdjuster;
-  late double _heightAdjuster;
 
   @override
   void initState() {
@@ -47,28 +45,28 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     context.watch<PathfindingController>();
-    final width = _controller.blockSize.width;
-    final height = _controller.blockSize.height;
 
     return GestureDetector(
       onTapDown: _onTapDown,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          _widthAdjuster = constraints.maxWidth % width / 2;
-          _heightAdjuster = constraints.maxHeight % height / 2;
+          final minLength = constraints.maxWidth < constraints.maxHeight
+              ? constraints.maxWidth
+              : constraints.maxHeight;
+          final width = minLength / _controller.columnCount;
+          final height = minLength / _controller.rowCount;
+          _controller.blockSize = Size(width, height);
+
+          final widthAdjuster = (constraints.maxWidth - minLength) / 2;
+          final heightAdjuster = (constraints.maxHeight - minLength) / 2;
+          _controller.widthAdjuster = widthAdjuster;
+          _controller.heightAdjuster = heightAdjuster;
 
           final animatedBlocks = List<Widget>.generate(
             _controller.getNodeBlockCount(),
             (i) {
               final nodeBlock = _controller.getNodeBlock(i);
-              final offset = _getOffset(
-                nodeBlock.row,
-                nodeBlock.column,
-                width,
-                height,
-                _widthAdjuster,
-                _heightAdjuster,
-              );
+              final offset = _getOffset(nodeBlock.row, nodeBlock.column);
               final animationController = _animationControllers[i];
 
               return AnimatedBlock(
@@ -109,8 +107,8 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
             foregroundPainter: BoardPainter(
               width,
               height,
-              _widthAdjuster,
-              _heightAdjuster,
+              widthAdjuster,
+              heightAdjuster,
               _onHitTest,
             ),
             child: SizedBox(
@@ -127,30 +125,22 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                     offset: _getOffset(
                       _controller.startingRowColumn.$1,
                       _controller.startingRowColumn.$2,
-                      width,
-                      height,
-                      _widthAdjuster,
-                      _heightAdjuster,
                     ),
                     onPanStart: (details) => panStart(
-                        details,
-                        _controller.startingRowColumn.$1,
-                        _controller.startingRowColumn.$2,
-                        NodeType.startingNode,
-                        _widthAdjuster,
-                        _heightAdjuster),
+                      details,
+                      _controller.startingRowColumn.$1,
+                      _controller.startingRowColumn.$2,
+                      NodeType.startingNode,
+                    ),
                     onPanUpdate: (details) => panUpdate(
-                        details,
-                        _controller.startingRowColumn.$1,
-                        _controller.startingRowColumn.$2,
-                        _widthAdjuster,
-                        _heightAdjuster),
+                      details,
+                      _controller.startingRowColumn.$1,
+                      _controller.startingRowColumn.$2,
+                    ),
                     onPanEnd: (details) => panEnd(
                       details,
                       _controller.startingRowColumn.$1,
                       _controller.startingRowColumn.$2,
-                      _widthAdjuster,
-                      _heightAdjuster,
                     ),
                   ),
                   ...animatedBlocks,
@@ -163,30 +153,22 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                     offset: _getOffset(
                       _controller.endingRowColumn.$1,
                       _controller.endingRowColumn.$2,
-                      width,
-                      height,
-                      _widthAdjuster,
-                      _heightAdjuster,
                     ),
                     onPanStart: (details) => panStart(
-                        details,
-                        _controller.endingRowColumn.$1,
-                        _controller.endingRowColumn.$2,
-                        NodeType.endingNode,
-                        _widthAdjuster,
-                        _heightAdjuster),
+                      details,
+                      _controller.endingRowColumn.$1,
+                      _controller.endingRowColumn.$2,
+                      NodeType.endingNode,
+                    ),
                     onPanUpdate: (details) => panUpdate(
-                        details,
-                        _controller.endingRowColumn.$1,
-                        _controller.endingRowColumn.$2,
-                        _widthAdjuster,
-                        _heightAdjuster),
+                      details,
+                      _controller.endingRowColumn.$1,
+                      _controller.endingRowColumn.$2,
+                    ),
                     onPanEnd: (details) => panEnd(
                       details,
                       _controller.endingRowColumn.$1,
                       _controller.endingRowColumn.$2,
-                      _widthAdjuster,
-                      _heightAdjuster,
                     ),
                   ),
                   if (_controller.isDragging)
@@ -210,8 +192,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     DragUpdateDetails details,
     int row,
     int column,
-    double widthAdjuster,
-    double heightAdjuster,
   ) {
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
@@ -230,8 +210,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     int row,
     int column,
     NodeType type,
-    double widthAdjuster,
-    double heightAdjuster,
   ) {
     _controller.draggingType = type;
   }
@@ -240,8 +218,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     DragEndDetails details,
     int row,
     int column,
-    double widthAdjuster,
-    double heightAdjuster,
   ) {
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
@@ -315,7 +291,8 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
       return false;
     }
 
-    if (position.dx - _widthAdjuster < 0 || position.dy - _heightAdjuster < 0) {
+    if (position.dx - _controller.widthAdjuster < 0 ||
+        position.dy - _controller.heightAdjuster < 0) {
       return false;
     }
 
@@ -331,9 +308,10 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   }
 
   (int, int) _getRowAndColumnFromOffset(Offset position) {
-    final row = (position.dy - _heightAdjuster) ~/ _controller.blockSize.height;
-    final column =
-        (position.dx - _widthAdjuster) ~/ _controller.blockSize.width;
+    final row = (position.dy - _controller.heightAdjuster) ~/
+        _controller.blockSize.height;
+    final column = (position.dx - _controller.widthAdjuster) ~/
+        _controller.blockSize.width;
 
     return (row, column);
   }
@@ -341,13 +319,10 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   Offset _getOffset(
     int row,
     int column,
-    double width,
-    double height,
-    double widthAdjuster,
-    double heightAdjuster,
   ) {
     return Offset(
-        column * width + widthAdjuster, row * height + heightAdjuster);
+        column * _controller.blockSize.width + _controller.widthAdjuster,
+        row * _controller.blockSize.height + _controller.heightAdjuster);
   }
 }
 
@@ -363,8 +338,8 @@ class BoardPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final vLines = (size.width ~/ _width) + 1;
-    final hLines = (size.height ~/ _height) + 1;
+    final minLength = size.width < size.height ? size.width : size.height;
+    final lineCount = (minLength ~/ _width) + 1;
 
     final paint = Paint()
       ..strokeWidth = 1
@@ -375,7 +350,7 @@ class BoardPainter extends CustomPainter {
 
     // Draw vertical lines
     final endY = size.height - (_heightAdjuster * 2);
-    for (var i = 0; i < vLines; ++i) {
+    for (var i = 0; i < lineCount; ++i) {
       final x = _width * i + _widthAdjuster;
       path.moveTo(x, _heightAdjuster);
       path.relativeLineTo(0, endY);
@@ -383,7 +358,7 @@ class BoardPainter extends CustomPainter {
 
     // Draw horizontal lines
     final endX = size.width - (_widthAdjuster * 2);
-    for (var i = 0; i < hLines; ++i) {
+    for (var i = 0; i < lineCount; ++i) {
       final y = _height * i + _heightAdjuster;
       path.moveTo(_widthAdjuster, y);
       path.relativeLineTo(endX, 0);
