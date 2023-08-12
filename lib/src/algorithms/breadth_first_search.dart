@@ -53,7 +53,7 @@ extension BreadthFirstSearch on Graph {
         update,
       );
 
-      if (targetNode.type != NodeType.endingNode) {
+      if (targetNode.type != NodeType.targetNode) {
         targetNode.type = NodeType.pathNode;
       }
       await update?.call(targetNode);

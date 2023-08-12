@@ -28,7 +28,7 @@ extension DijkstrasAlgorithm on Graph {
       for (var neighborNode in findAdjacentNodes(node)) {
         if (neighborNode != null) {
           if (relax(node, neighborNode, weight)) {
-            if (neighborNode.type == NodeType.endingNode) {
+            if (neighborNode.type == NodeType.targetNode) {
               return;
             } else {
               neighborNode.type = NodeType.searchedNode;

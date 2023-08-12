@@ -28,7 +28,7 @@ extension DepthFirstSearch on Graph {
         for (var adjacentNode in findAdjacentNodes(node)) {
           if (adjacentNode != null &&
               (adjacentNode.type == NodeType.none ||
-                  adjacentNode.type == NodeType.endingNode)) {
+                  adjacentNode.type == NodeType.targetNode)) {
             stack.push(adjacentNode);
             isNewNodeAdded = true;
           }

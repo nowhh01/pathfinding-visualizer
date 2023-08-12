@@ -118,10 +118,9 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                   Block(
                     size: _controller.blockSize,
                     icon: Icons.keyboard_arrow_right,
-                    iconColor:
-                        isDragging && draggingType == NodeType.startingNode
-                            ? Colors.black.withOpacity(0.2)
-                            : Colors.black,
+                    iconColor: isDragging && draggingType == NodeType.startNode
+                        ? Colors.black.withOpacity(0.2)
+                        : Colors.black,
                     offset: _getOffset(
                       _controller.startingRowColumn.$1,
                       _controller.startingRowColumn.$2,
@@ -130,7 +129,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                       details,
                       _controller.startingRowColumn.$1,
                       _controller.startingRowColumn.$2,
-                      NodeType.startingNode,
+                      NodeType.startNode,
                     ),
                     onPanUpdate: (details) => panUpdate(
                       details,
@@ -147,7 +146,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                   Block(
                     size: _controller.blockSize,
                     icon: Icons.adjust,
-                    iconColor: isDragging && draggingType == NodeType.endingNode
+                    iconColor: isDragging && draggingType == NodeType.targetNode
                         ? Colors.black.withOpacity(0.2)
                         : Colors.black,
                     offset: _getOffset(
@@ -158,7 +157,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                       details,
                       _controller.endingRowColumn.$1,
                       _controller.endingRowColumn.$2,
-                      NodeType.endingNode,
+                      NodeType.targetNode,
                     ),
                     onPanUpdate: (details) => panUpdate(
                       details,
@@ -174,7 +173,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                   if (_controller.isDragging)
                     Block(
                       size: _controller.blockSize,
-                      icon: _controller.draggingType == NodeType.startingNode
+                      icon: _controller.draggingType == NodeType.startNode
                           ? Icons.chevron_right
                           : Icons.adjust,
                       offset: _controller.blockPosition!,
@@ -231,7 +230,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
 
     final draggingType = _controller.draggingType!;
     final newRowColumn = (newRow, newColumn);
-    if (draggingType == NodeType.startingNode) {
+    if (draggingType == NodeType.startNode) {
       _controller.startingRowColumn = newRowColumn;
     } else {
       _controller.endingRowColumn = newRowColumn;
@@ -277,8 +276,8 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
         _controller.changeNodeType(row, column, NodeType.wallNode);
         break;
       case NodeType.wallNode:
-      case NodeType.startingNode:
-      case NodeType.endingNode:
+      case NodeType.startNode:
+      case NodeType.targetNode:
       case NodeType.searchedNode:
       case NodeType.pathNode:
       default:

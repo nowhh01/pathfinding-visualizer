@@ -123,8 +123,8 @@ class PathfindingController extends ChangeNotifier {
         case NodeType.wallNode:
           _addNodeBlock(node);
           break;
-        case NodeType.startingNode:
-        case NodeType.endingNode:
+        case NodeType.startNode:
+        case NodeType.targetNode:
         case NodeType.searchedNode:
         case NodeType.pathNode:
         default:
@@ -148,7 +148,7 @@ class PathfindingController extends ChangeNotifier {
   }
 
   Future<void> startFindingPath() async {
-    await _graph.bfs(
+    await _graph.da(
       _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
       _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
       _update,
@@ -163,9 +163,9 @@ class PathfindingController extends ChangeNotifier {
 
   void _resetStartAndEndNode() {
     _graph.nodes[startingRowColumn.$1][startingRowColumn.$2].type =
-        NodeType.startingNode;
+        NodeType.startNode;
     _graph.nodes[endingRowColumn.$1][endingRowColumn.$2].type =
-        NodeType.endingNode;
+        NodeType.targetNode;
   }
 
   Future<void> _update(Node node) async {
@@ -185,7 +185,7 @@ class PathfindingController extends ChangeNotifier {
         startingColor = Colors.indigoAccent;
         endingColor = Colors.greenAccent;
         break;
-      case NodeType.endingNode:
+      case NodeType.targetNode:
         startingColor = Colors.yellowAccent;
         endingColor = Colors.yellowAccent;
         break;

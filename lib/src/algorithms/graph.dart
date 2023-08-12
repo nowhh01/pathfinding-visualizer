@@ -4,8 +4,8 @@ enum NodeType {
   none,
   searchedNode,
   pathNode,
-  startingNode,
-  endingNode,
+  startNode,
+  targetNode,
   wallNode,
 }
 
