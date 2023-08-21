@@ -2,6 +2,8 @@ import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 
 import '../../algorithms/breadth_first_search.dart';
+import '../../algorithms/depth_first_search.dart';
+import '../../algorithms/dijkstras_algorithm.dart';
 import '../../algorithms/graph.dart';
 
 enum SpeedType { fast, normal, slow }
@@ -104,6 +106,14 @@ class PathfindingController extends ChangeNotifier {
   Offset get draggingBlockPosAjuster =>
       Offset(blockSize.width / 4, blockSize.height / 4);
 
+  var _algorithmType = AlgorithmType.none;
+  AlgorithmType get algorithmType => _algorithmType;
+  set algorithmType(AlgorithmType type) {
+    _algorithmType = type;
+
+    notifyListeners();
+  }
+
   NodeType getNodeType(int row, int column) => _graph.nodes[row][column].type;
   void changeNodeType(int row, int column, NodeType newType) {
     final node = _graph.nodes[row][column];
@@ -148,17 +158,37 @@ class PathfindingController extends ChangeNotifier {
   }
 
   Future<void> startFindingPath() async {
-    await _graph.da(
-      _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
-      _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
-      _update,
-    );
+    Future<void> Function(Node, Node, [Future<void> Function(Node)])?
+        algorithmFunc;
 
-    await _graph.findPath(
-      _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
-      _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
-      _update,
-    );
+    switch (algorithmType) {
+      case AlgorithmType.bfs:
+        algorithmFunc = _graph.bfs;
+        break;
+      case AlgorithmType.dfs:
+        algorithmFunc = _graph.dfs;
+        break;
+      case AlgorithmType.da:
+        algorithmFunc = _graph.da;
+        break;
+      case AlgorithmType.none:
+      default:
+        break;
+    }
+
+    if (algorithmFunc != null) {
+      await algorithmFunc(
+        _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
+        _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
+        _update,
+      );
+
+      await _graph.findPath(
+        _graph.nodes[startingRowColumn.$1][startingRowColumn.$2],
+        _graph.nodes[endingRowColumn.$1][endingRowColumn.$2],
+        _update,
+      );
+    }
   }
 
   void _resetStartAndEndNode() {

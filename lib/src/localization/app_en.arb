@@ -10,6 +10,8 @@
   },
   "menuItemAlgorithms": "Algorithms",
   "menuItemBfs": "Breadth-First Search",
+  "menuItemDfs": "Depth-First Search",
+  "menuItemDA": "Dijkstra's Algorithm",
   "menuItemClearBoard": "Clear Board",
   "menuItemStart": "Start",
   "menuItemSpeed": "Speed",

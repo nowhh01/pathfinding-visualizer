@@ -9,6 +9,13 @@ enum NodeType {
   wallNode,
 }
 
+enum AlgorithmType {
+  none,
+  bfs,
+  dfs,
+  da,
+}
+
 class Node {
   int row;
   int column;

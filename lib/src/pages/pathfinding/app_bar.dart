@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:pathfinding_visualizer/src/algorithms/graph.dart';
 import 'package:provider/provider.dart';
 
 import 'pathfinding_controller.dart';
@@ -15,14 +16,34 @@ class PathfindingAppBar extends StatelessWidget implements PreferredSizeWidget {
     final localizations = AppLocalizations.of(context)!;
     final controller = context.read<PathfindingController>();
 
+    final algorithmType =
+        context.select((PathfindingController c) => c.algorithmType);
+    final startMenuItemName = algorithmType == AlgorithmType.none
+        ? localizations.menuItemStart
+        : '${localizations.menuItemStart} ${algorithmType.name.toUpperCase()}';
+
     return AppBar(
       title: Text(localizations.pathfindingViewTitle),
       actions: [
         SubmenuButton(
           menuChildren: [
             MenuItemButton(
-              onPressed: () {},
+              onPressed: () {
+                controller.algorithmType = AlgorithmType.bfs;
+              },
               child: Text(localizations.menuItemBfs),
+            ),
+            MenuItemButton(
+              onPressed: () {
+                controller.algorithmType = AlgorithmType.dfs;
+              },
+              child: Text(localizations.menuItemDfs),
+            ),
+            MenuItemButton(
+              onPressed: () {
+                controller.algorithmType = AlgorithmType.da;
+              },
+              child: Text(localizations.menuItemDA),
             )
           ],
           child: Text(localizations.menuItemAlgorithms),
@@ -33,7 +54,7 @@ class PathfindingAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         MenuItemButton(
           onPressed: controller.startFindingPath,
-          child: Text(localizations.menuItemStart),
+          child: Text(startMenuItemName),
         ),
         SubmenuButton(
           menuChildren: [
