@@ -78,6 +78,16 @@ class PathfindingController extends ChangeNotifier {
   NodeType? draggingType;
   Graph _graph;
   Size blockSize = Size.zero;
+  Size _boardSize = Size.zero;
+  Size get boardSize => _boardSize;
+  set boardSize(Size newSize) {
+    final minLength =
+        newSize.width < newSize.height ? newSize.width : newSize.height;
+    blockSize = Size(minLength / columnCount, minLength / rowCount);
+    widthAdjuster = (newSize.width - minLength) / 2;
+    heightAdjuster = (newSize.height - minLength) / 2;
+    _boardSize = newSize;
+  }
 
   final _nodeBlocks = <NodeBlock>[];
   int get animationTimeInMillisec =>
@@ -189,6 +199,17 @@ class PathfindingController extends ChangeNotifier {
         _update,
       );
     }
+  }
+
+  bool containInBoard(Offset position) {
+    if (position.dx - widthAdjuster < 0 ||
+        position.dy - heightAdjuster < 0 ||
+        position.dx + widthAdjuster > boardSize.width ||
+        position.dy + heightAdjuster > boardSize.height) {
+      return false;
+    }
+
+    return true;
   }
 
   void _resetStartAndEndNode() {

@@ -50,18 +50,10 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
       onTapDown: _onTapDown,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final minLength = constraints.maxWidth < constraints.maxHeight
-              ? constraints.maxWidth
-              : constraints.maxHeight;
-          final width = minLength / _controller.columnCount;
-          final height = minLength / _controller.rowCount;
-          _controller.blockSize = Size(width, height);
-
-          final widthAdjuster = (constraints.maxWidth - minLength) / 2;
-          final heightAdjuster = (constraints.maxHeight - minLength) / 2;
-          _controller.widthAdjuster = widthAdjuster;
-          _controller.heightAdjuster = heightAdjuster;
-
+          _controller.boardSize =
+              Size(constraints.maxWidth, constraints.maxHeight);
+          final width = _controller.blockSize.width;
+          final height = _controller.blockSize.height;
           final animatedBlocks = List<Widget>.generate(
             _controller.getNodeBlockCount(),
             (i) {
@@ -107,8 +99,8 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
             foregroundPainter: BoardPainter(
               width,
               height,
-              widthAdjuster,
-              heightAdjuster,
+              _controller.widthAdjuster,
+              _controller.heightAdjuster,
               _onHitTest,
             ),
             child: SizedBox(
@@ -290,8 +282,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
       return false;
     }
 
-    if (position.dx - _controller.widthAdjuster < 0 ||
-        position.dy - _controller.heightAdjuster < 0) {
+    if (!_controller.containInBoard(position)) {
       return false;
     }
 
