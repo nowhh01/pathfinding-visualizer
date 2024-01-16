@@ -168,7 +168,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
                       icon: _controller.draggingType == NodeType.startNode
                           ? Icons.chevron_right
                           : Icons.adjust,
-                      offset: _controller.blockPosition!,
+                      offset: _controller.draggingBlockPosition!,
                     ),
                 ],
               ),
@@ -184,16 +184,35 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
     int row,
     int column,
   ) {
+    final originalPostion = _getOffset(row, column);
+    final draggingBlockPosAjuster = _controller.draggingBlockPosAjuster;
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
-    final draggingBlockPosAjuster = _controller.draggingBlockPosAjuster;
-    final blockX = details.localPosition.dx -
-        draggingBlockPosAjuster.dx +
-        (column * width);
-    final blockY =
-        details.localPosition.dy - draggingBlockPosAjuster.dy + (row * height);
 
-    _controller.blockPosition = Offset(blockX, blockY);
+    var draggingBlockX = details.localPosition.dx -
+        draggingBlockPosAjuster.dx +
+        originalPostion.dx;
+    var draggingBlockY = details.localPosition.dy -
+        draggingBlockPosAjuster.dy +
+        originalPostion.dy;
+
+    if (draggingBlockX - _controller.widthAdjuster < 0) {
+      draggingBlockX = _controller.widthAdjuster;
+    } else if (draggingBlockX + _controller.widthAdjuster + width >
+        _controller.boardSize.width) {
+      draggingBlockX =
+          _controller.widthAdjuster + ((_controller.columnCount - 1) * width);
+    }
+
+    if (draggingBlockY - _controller.heightAdjuster < 0) {
+      draggingBlockY = _controller.heightAdjuster;
+    } else if (draggingBlockY + _controller.heightAdjuster + height >
+        _controller.boardSize.height) {
+      draggingBlockY =
+          _controller.heightAdjuster + ((_controller.rowCount - 1) * height);
+    }
+
+    _controller.draggingBlockPosition = Offset(draggingBlockX, draggingBlockY);
   }
 
   void panStart(
@@ -212,11 +231,15 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   ) {
     final width = _controller.blockSize.width;
     final height = _controller.blockSize.height;
-    final blockPosition = _controller.blockPosition!;
+    final draggingBlockPosition = _controller.draggingBlockPosition!;
     final draggingBlockPosAjuster = _controller.draggingBlockPosAjuster;
 
-    final x = blockPosition.dx + draggingBlockPosAjuster.dx;
-    final y = blockPosition.dy + draggingBlockPosAjuster.dy;
+    final x = draggingBlockPosition.dx +
+        draggingBlockPosAjuster.dx -
+        _controller.widthAdjuster;
+    final y = draggingBlockPosition.dy +
+        draggingBlockPosAjuster.dy -
+        _controller.heightAdjuster;
     final newColumn = x ~/ width;
     final newRow = y ~/ height;
 
@@ -230,7 +253,7 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
 
     _controller.changeNodeType(row, column, NodeType.none);
     _controller.changeNodeType(newRow, newColumn, draggingType);
-    _controller.blockPosition = null;
+    _controller.draggingBlockPosition = null;
     _controller.draggingType = null;
   }
 
@@ -259,7 +282,6 @@ class _BoardViewState extends State<BoardView> with TickerProviderStateMixin {
   }
 
   void _onTapDown(TapDownDetails details) {
-    log('tap down');
     final (int row, int column) =
         _getRowAndColumnFromOffset(details.localPosition);
 

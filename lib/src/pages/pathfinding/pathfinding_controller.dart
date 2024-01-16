@@ -104,17 +104,17 @@ class PathfindingController extends ChangeNotifier {
     }
   }
 
-  Offset? _blockPosition;
-  Offset? get blockPosition => _blockPosition;
-  set blockPosition(newPosition) {
-    _blockPosition = newPosition;
+  Offset? _draggingBlockPosition;
+  Offset? get draggingBlockPosition => _draggingBlockPosition;
+  set draggingBlockPosition(newPosition) {
+    _draggingBlockPosition = newPosition;
 
     notifyListeners();
   }
 
-  bool get isDragging => _blockPosition != null;
+  bool get isDragging => _draggingBlockPosition != null;
   Offset get draggingBlockPosAjuster =>
-      Offset(blockSize.width / 4, blockSize.height / 4);
+      Offset(blockSize.width / 2, blockSize.height / 2);
 
   var _algorithmType = AlgorithmType.none;
   AlgorithmType get algorithmType => _algorithmType;
