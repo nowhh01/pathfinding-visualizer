@@ -59,7 +59,7 @@ class InfoContainer extends StatelessWidget {
         FittedBox(
           child: Row(
             children: [
-              const Icon(Icons.square, color: Colors.black),
+              const Icon(Icons.square),
               Text(localizations.wallBlock),
             ],
           ),
