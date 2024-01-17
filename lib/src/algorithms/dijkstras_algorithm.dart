@@ -14,30 +14,31 @@ extension DijkstrasAlgorithm on Graph {
       }
     }
 
-    queue.sort((a, b) => (b.row + b.column).compareTo(a.row + a.column));
+    // final set = <Node>{};
+    const weight = 1;
     startNode.distance = 0;
 
-    final set = <Node>{};
-    final weight = 1;
-
     while (queue.isNotEmpty) {
-      final node = queue.last;
-      queue.removeLast();
-      set.add(node);
+      queue.sort((a, b) => b.distance.compareTo(a.distance));
+      final node = queue.removeLast();
+      // set.add(node);
 
       for (var neighborNode in findAdjacentNodes(node)) {
         if (neighborNode != null) {
-          if (relax(node, neighborNode, weight)) {
+          if (neighborNode.type != NodeType.wallNode &&
+              relax(node, neighborNode, weight)) {
             if (neighborNode.type == NodeType.targetNode) {
               return;
-            } else {
-              neighborNode.type = NodeType.searchedNode;
-              await update?.call(neighborNode);
             }
+
+            neighborNode.type = NodeType.searchedNode;
+            await update?.call(neighborNode);
           }
         }
       }
     }
+
+    var ddd = 1;
   }
 
   bool relax(Node node, Node targetNode, int weight) {
